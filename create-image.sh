@@ -165,8 +165,14 @@ echo 'binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc defaults 0 0' | sudo tee 
 echo -en "127.0.0.1\tlocalhost\n" | sudo tee $DIR/etc/hosts
 echo "nameserver 8.8.8.8" | sudo tee -a $DIR/etc/resolve.conf
 echo "polyu" | sudo tee $DIR/etc/hostname
-ssh-keygen -f $RELEASE.id_rsa -t rsa -N ''
+if [ ! -f "$RELEASE.id_rsa" ]; then
+    ssh-keygen -f $RELEASE.id_rsa -t rsa -N ''
+fi
 sudo mkdir -p $DIR/root/.ssh/
+if [ ! -f "$RELEASE.id_rsa.pub" ]; then
+    echo "$RELEASE.id_rsa.pub does not exist"
+    exit 1
+fi
 cat $RELEASE.id_rsa.pub | sudo tee $DIR/root/.ssh/authorized_keys
 
 # Add perf support
@@ -176,7 +182,7 @@ if [ $PERF = "true" ]; then
     sudo chroot $DIR /bin/bash -c "apt-get update; apt-get install -y flex bison python-dev libelf-dev libunwind8-dev libaudit-dev libslang2-dev libperl-dev binutils-dev liblzma-dev libnuma-dev"
     sudo chroot $DIR /bin/bash -c "cd /tmp/$BASENAME/tools/perf/; make"
     sudo chroot $DIR /bin/bash -c "cp /tmp/$BASENAME/tools/perf/perf /usr/bin/"
-    rm -r $DIR/tmp/$BASENAME
+    sudo chroot $DIR /bin/bash -c "rm -rf /tmp/$BASENAME"
 fi
 
 # Add udev rules for custom drivers.
@@ -184,12 +190,19 @@ fi
 echo 'ATTR{name}=="vim2m", SYMLINK+="vim2m"' | sudo tee -a $DIR/etc/udev/rules.d/50-udev-default.rules
 
 # Build a disk image
-dd if=/dev/zero of=$RELEASE.img bs=1M seek=$SEEK count=1
-sudo mkfs.ext4 -F $RELEASE.img
+IMAGE_NAME=$RELEASE
+if [ $PERF = "true" ]; then
+    IMAGE_NAME=$IMAGE_NAME-perf
+fi
+IMAGE_NAME=$IMAGE_NAME.img
+
+dd if=/dev/zero of=$IMAGE_NAME bs=1M seek=$SEEK count=1
+sudo mkfs.ext4 -F $IMAGE_NAME
 sudo mkdir -p /mnt/$DIR
-sudo mount -o loop $RELEASE.img /mnt/$DIR
+sudo mount -o loop $IMAGE_NAME /mnt/$DIR
 sudo cp -a $DIR/. /mnt/$DIR/.
 sudo umount /mnt/$DIR
+sudo rm -rf $DIR
 
 # Calculate MD5 sum
-md5sum $RELEASE.img > $RELEASE.img.md5
+md5sum $IMAGE_NAME > $IMAGE_NAME.md5
