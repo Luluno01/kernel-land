@@ -1,0 +1,12 @@
+diff --git a/Makefile b/Makefile
+index 9ef547fc7ffe..6645a274b6e3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -501,6 +501,7 @@ ifneq ($(GCC_TOOLCHAIN),)
+ CLANG_FLAGS	+= --gcc-toolchain=$(GCC_TOOLCHAIN)
+ endif
+ CLANG_FLAGS	+= -no-integrated-as
++CLANG_FLAGS	+= -fno-builtin-bcmp
+ KBUILD_CFLAGS	+= $(CLANG_FLAGS)
+ KBUILD_AFLAGS	+= $(CLANG_FLAGS)
+ export CLANG_FLAGS
