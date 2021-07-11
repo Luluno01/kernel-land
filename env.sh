@@ -30,7 +30,7 @@ start() {
   echo Starting VM via \`screen\`
   screen -d -m qemu-system-x86_64 \
     -m 2G \
-    -smp 2 \
+    -smp 8 \
     -kernel $KERNEL/arch/x86/boot/bzImage \
     -append "console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0" \
     -drive file=$IMAGE,format=raw \
@@ -40,6 +40,15 @@ start() {
     -nographic \
     -pidfile vm.pid \
     -snapshot
+}
+
+stop() {
+  if [ ! -f vm.pid ]; then
+    echo 'Error: PID file "vm.pid" does not exist, the VM might have stopped'
+    return 1
+  fi
+  pid=`cat vm.pid`
+  kill $pid && echo Stopped VM process $pid
 }
 
 conn() {
