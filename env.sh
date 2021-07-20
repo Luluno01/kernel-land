@@ -72,7 +72,7 @@ conn() {
 }
 alias con='conn'
 
-file() {
+fs() {
   if _checkKeyAndPort; then
     sftp -o StrictHostKeyChecking=no -i $KEY -P $PORT root@localhost
   else
