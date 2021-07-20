@@ -51,13 +51,31 @@ stop() {
   kill $pid && echo Stopped VM process $pid
 }
 
-conn() {
+_checkKeyAndPort() {
   if [ "$KEY" = "" ]; then
-    echo Warning: environment variable KEY not set
+    echo Error: environment variable KEY not set
+    return 1
   fi
   if [ "$PORT" = "" ]; then
-    echo Warning: environment variable PORT not set
+    echo Error: environment variable PORT not set
+    return 1
   fi
-  ssh -i $KEY -p $PORT -o "StrictHostKeyChecking no" root@localhost
+  return 0
+}
+
+conn() {
+  if _checkKeyAndPort; then
+    ssh -i $KEY -p $PORT -o "StrictHostKeyChecking no" root@localhost
+  else
+    return 1
+  fi
 }
 alias con='conn'
+
+file() {
+  if _checkKeyAndPort; then
+    sftp -o StrictHostKeyChecking=no -i $KEY -P $PORT root@localhost
+  else
+    return 1
+  fi
+}
