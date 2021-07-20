@@ -1,7 +1,7 @@
 # export CC=`which gcc`
 
 alias dconf='make CC=$CC defconfig'
-alias kconf='make CC=$CC kvmconfig'
+alias kconf='make CC=$CC kvm_guest.config'
 alias dkconf='dconf && kconf'
 alias uconf='node ../update-config.js'
 alias oconf='make CC=$CC olddefconfig'
