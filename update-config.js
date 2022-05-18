@@ -1,4 +1,5 @@
-const { writeFile, readFile } = require('fs').promises
+const { writeFile, readFile } = require('fs/promises')
+const assert = require('assert')
 
 
 function setConfig(config, key, value) {
@@ -35,6 +36,15 @@ function setConfig(config, key, value) {
   }
 }
 
+/**
+ * Get the key and value from config line "key=value"
+ */
+function splitConfig(confLine) {
+  const i = confLine.indexOf('=')
+  assert(i >= 0, `Broken config "${confLine}"`)
+  return [ confLine.slice(0, i), confLine.slice(i + 1) ]
+}
+
 async function main() {
   let [ config, rawNewConfig ] = await Promise.all([
     (async () => (await readFile('.config')).toString())(),
@@ -42,7 +52,7 @@ async function main() {
   ])
   const newConfig = rawNewConfig.trim()
     .split(/[\r\n]+/)
-    .map(line => line.trim().split('='))
+    .map(line => splitConfig(line.trim()))
   for (const [ key, value ] of newConfig) {
     config = setConfig(config, key, value)
   }
